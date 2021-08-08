@@ -1,0 +1,80 @@
+{
+  "name": "PebbleGotchi",
+  "author": "Jean-Christophe Rona",
+  "version": "1.0.0",
+  "keywords": ["pebble-app"],
+  "private": true,
+  "dependencies": {},
+  "pebble": {
+    "displayName": "PebbleGotchi",
+    "uuid": "c1ebfca3-d38f-43c5-b209-0d9ed20a97f4",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": [
+      "basalt",
+      "chalk",
+      "diorite"
+    ],
+    "watchapp": {
+      "watchface": false
+    },
+    "messageKeys": [
+      "dummy"
+    ],
+    "resources": {
+      "media": [
+        {
+          "menuIcon": true,
+          "type": "bitmap",
+          "name": "IMAGE_MENU_ICON",
+          "file": "images/menu_icon.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "BACKGROUND",
+          "file": "images/background.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON1",
+          "file": "images/icon1.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON2",
+          "file": "images/icon2.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON3",
+          "file": "images/icon3.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON4",
+          "file": "images/icon4.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON5",
+          "file": "images/icon5.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON6",
+          "file": "images/icon6.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON7",
+          "file": "images/icon7.png"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON8",
+          "file": "images/icon8.png"
+        }
+      ]
+    }
+  }
+}
