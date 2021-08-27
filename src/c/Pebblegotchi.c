@@ -150,6 +150,103 @@ static hal_t hal = {
 	.handler = &hal_handler,
 };
 
+static void state_save(void)
+{
+	state_t *state;
+	uint8_t buf[160];
+	uint32_t key = 0;
+	uint32_t i, j;
+
+	state = tamalib_get_state();
+
+	/* All fields are written following the struct order */
+	persist_write_int(key++, *(state->pc) & 0x1FFF);
+	persist_write_int(key++, *(state->x) & 0xFFF);
+	persist_write_int(key++, *(state->y) & 0xFFF);
+	persist_write_int(key++, *(state->a) & 0xF);
+	persist_write_int(key++, *(state->b) & 0xF);
+	persist_write_int(key++, *(state->np) & 0x1F);
+	persist_write_int(key++, *(state->sp) & 0xFF);
+	persist_write_int(key++, *(state->flags) & 0xF);
+	persist_write_int(key++, *(state->clk_timer_timestamp));
+	persist_write_int(key++, *(state->prog_timer_timestamp));
+	persist_write_int(key++, *(state->prog_timer_enabled) & 0x1);
+	persist_write_int(key++, *(state->prog_timer_data) & 0xFF);
+	persist_write_int(key++, *(state->prog_timer_rld) & 0xFF);
+	persist_write_int(key++, *(state->call_depth));
+
+	for (i = 0; i < INT_SLOT_NUM; i++) {
+		persist_write_int(key++, state->interrupts[i].factor_flag_reg & 0xF);
+		persist_write_int(key++, state->interrupts[i].mask_reg & 0xF);
+		persist_write_int(key++, state->interrupts[i].triggered & 0x1);
+	}
+
+	/* First 640 half bytes correspond to the RAM */
+	for (j = 0; j < 4; j++) {
+		for (i = 0; i < sizeof(buf); i++) {
+			buf[i] = state->memory[i + j * sizeof(buf)];
+		}
+		persist_write_data(key++, &buf, sizeof(buf));
+	}
+
+	/* I/Os are from 0xF00 to 0xF7F */
+	for (i = 0; i < sizeof(buf); i++) {
+		buf[i] = state->memory[i + 0xF00];
+	}
+	persist_write_data(key++, &buf, sizeof(buf));
+}
+
+static void state_load(void)
+{
+	state_t *state;
+	uint8_t buf[160];
+	uint32_t key = 0;
+	uint32_t i, j;
+
+	if (!persist_exists(0)) {
+		/* Assume no key exists */
+		return;
+	}
+
+	state = tamalib_get_state();
+
+	/* All fields are written following the struct order */
+	*(state->pc) = persist_read_int(key++) & 0x1FFF;
+	*(state->x) = persist_read_int(key++) & 0xFFF;
+	*(state->y) = persist_read_int(key++) & 0xFFF;
+	*(state->a) = persist_read_int(key++) & 0xF;
+	*(state->b) = persist_read_int(key++) & 0xF;
+	*(state->np) = persist_read_int(key++) & 0x1F;
+	*(state->sp) = persist_read_int(key++) & 0xFF;
+	*(state->flags) = persist_read_int(key++) & 0xF;
+	*(state->clk_timer_timestamp) = persist_read_int(key++);
+	*(state->prog_timer_timestamp) = persist_read_int(key++);
+	*(state->prog_timer_enabled) = persist_read_int(key++) & 0x1;
+	*(state->prog_timer_data) = persist_read_int(key++) & 0xFF;
+	*(state->prog_timer_rld) = persist_read_int(key++) & 0xFF;
+	*(state->call_depth) = persist_read_int(key++);
+
+	for (i = 0; i < INT_SLOT_NUM; i++) {
+		state->interrupts[i].factor_flag_reg = persist_read_int(key++) & 0xF;
+		state->interrupts[i].mask_reg = persist_read_int(key++) & 0xF;
+		state->interrupts[i].triggered = persist_read_int(key++) & 0x1;
+	}
+
+	/* First 640 half bytes correspond to the RAM */
+	for (j = 0; j < 4; j++) {
+		persist_read_data(key++, &buf, sizeof(buf));
+		for (i = 0; i < sizeof(buf); i++) {
+			state->memory[i + j * sizeof(buf)] = buf[i];
+		}
+	}
+
+	/* I/Os are from 0xF00 to 0xF7F */
+	persist_read_data(key++, &buf, sizeof(buf));
+	for (i = 0; i < sizeof(buf); i++) {
+		state->memory[i + 0xF00] = buf[i];
+	}
+}
+
 static void canvas_update_proc(Layer *layer, GContext *ctx) {
 	u8_t i, j;
 
@@ -269,9 +366,11 @@ static void prv_init(void) {
 
 	tamalib_register_hal(&hal);
 	tamalib_init(g_program, NULL, 1000000);
+	state_load();
 }
 
 static void prv_deinit(void) {
+	state_save();
 	tamalib_release();
 
 	window_destroy(s_window);
