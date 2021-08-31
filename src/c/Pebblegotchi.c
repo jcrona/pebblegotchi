@@ -173,6 +173,7 @@ static void state_save(void)
 	persist_write_int(key++, *(state->np) & 0x1F);
 	persist_write_int(key++, *(state->sp) & 0xFF);
 	persist_write_int(key++, *(state->flags) & 0xF);
+	persist_write_int(key++, *(state->tick_counter));
 	persist_write_int(key++, *(state->clk_timer_timestamp));
 	persist_write_int(key++, *(state->prog_timer_timestamp));
 	persist_write_int(key++, *(state->prog_timer_enabled) & 0x1);
@@ -234,6 +235,7 @@ static void state_load(void)
 	*(state->np) = persist_read_int(key++) & 0x1F;
 	*(state->sp) = persist_read_int(key++) & 0xFF;
 	*(state->flags) = persist_read_int(key++) & 0xF;
+	*(state->tick_counter) = persist_read_int(key++);
 	*(state->clk_timer_timestamp) = persist_read_int(key++);
 	*(state->prog_timer_timestamp) = persist_read_int(key++);
 	*(state->prog_timer_enabled) = persist_read_int(key++) & 0x1;
