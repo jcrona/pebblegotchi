@@ -36,6 +36,8 @@
 #define BG_WIDTH					144
 #define BG_HEIGHT					144
 
+#define STATE_STORAGE_VERSION				0
+
 static Window *s_window;
 
 static AppTimer *s_cpu_timer = NULL;
@@ -159,6 +161,9 @@ static void state_save(void)
 
 	state = tamalib_get_state();
 
+	/* Start with the version number */
+	persist_write_int(key++, STATE_STORAGE_VERSION);
+
 	/* All fields are written following the struct order */
 	persist_write_int(key++, *(state->pc) & 0x1FFF);
 	persist_write_int(key++, *(state->x) & 0xFFF);
@@ -200,11 +205,21 @@ static void state_load(void)
 {
 	state_t *state;
 	uint8_t buf[160];
+	uint32_t version;
 	uint32_t key = 0;
 	uint32_t i, j;
 
-	if (!persist_exists(0)) {
+	/* Start with the version number */
+	if (!persist_exists(key)) {
 		/* Assume no key exists */
+		return;
+	}
+
+	version = persist_read_int(key++);
+	if (version != STATE_STORAGE_VERSION) {
+		/* Invalid version
+		 * TODO: Handle migration at a point
+		 */
 		return;
 	}
 
